@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans default-autowire="byName"
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+
+	<context:annotation-config></context:annotation-config>
+	<context:component-scan base-package="cn.sz.gl"></context:component-scan>
+	
+	<mvc:resources location="/js/" mapping="/js/**"></mvc:resources>
+	
+	<mvc:annotation-driven></mvc:annotation-driven>
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver" >
+		<property name="prefix" value="/"></property>
+		<property name="suffix" value=".jsp" ></property>
+	</bean>
+	
+	<context:property-placeholder location="classpath:jdbc.properties" />
+	<!-- 数据源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" >
+		<property name="driverClassName" value="${mydriver}"></property>
+		<property name="url" value="${myurl}"></property>
+		<property name="username" value="${myuser}" ></property>
+		<property name="password" value="${mypwd}" ></property>
+	</bean>
+	
+	<!-- 连接工厂 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean" >
+		<property name="dataSource" ref="dataSource" ></property>
+		<property name="configLocation" value="classpath:mybatis_config.xml" ></property>
+	</bean>
+	
+	
+	
+	
+	<!-- 
+		事务管理，分为两种：申明式事务和编程式事务
+			开发中推荐使用申明式事务
+			一般事务管理都放在service层来管理
+	
+	 -->
+	
+	<!-- 1.创建事务管理对象 -->
+	<!-- <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager" >
+		<property name="dataSource" ref="dataSource" ></property>
+	</bean> -->
+	
+	<!-- 2.指定事务管理规则 -->
+	<!-- 
+		propagation : 事务的传播属性
+			REQUIRED : 现在如果已经有事务了，就使用现有的事务;如果没有，就创建一个新的事务
+			REQUIRES_NEW : 不管现在是否存在事务，这里都要创建一个新的事务
+		isolation : 事务的隔离级别
+			READ_COMMITTED : 事务结束之前，其他事务不允许操作这里管理的数据
+			READ_UNCOMMITTED : 事务结束之前，其他事务也可以读取这里操作的数据
+		no-rollback-for : 当发生某个异常的时候，不回滚
+		rollback-for : 当发生某个指定异常的时候，回滚事务
+		read-only : 只读事务,本事务里面只允许读数据库的操作，不允许增，删，改操作
+		timeout : 本事务处理不允许超过这个指定的时间，如果超过了，不管成没成功，都回滚,单位是秒
+	
+	 -->
+	<!-- <tx:advice id="adv" transaction-manager="transactionManager" >
+		<tx:attributes>
+			<tx:method name="buy*" rollback-for="cn.sz.gl.util.BalanceLessException"  propagation="REQUIRED" />
+			<tx:method name="buy*" rollback-for="cn.sz.gl.util.BookCountLessException"  propagation="REQUIRED" />
+			<tx:method name="*" propagation="REQUIRED" />
+		</tx:attributes>
+	</tx:advice> -->
+	
+	<!-- 3.为规则指定应用的范围 -->
+	<!-- <aop:config>
+		<aop:pointcut expression="execution(* cn.sz.gl.service.IStoreHouseService.*(..))" id="shs"/>
+		<aop:advisor advice-ref="adv" pointcut-ref="shs" />
+	</aop:config> -->
+	
+	
+	
+	
+	<!-- **************************************************************************************** -->
+	<!-- 
+		使用注解方式实现事务：
+		1.准备事务处理对象
+		2.通过注解来驱动事务
+		3.在要加入事务管理的方法前，通过@Transactional来添加事务规则
+	 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager" >
+		<property name="dataSource" ref="dataSource" ></property>
+	</bean>
+	
+	<!-- 通过注解来驱动事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	
+	<!-- 配置拦截器 -->
+	
+	<!-- <bean id="checklogin" class="cn.sz.gl.util.LoginIntercepter" ></bean>
+	<mvc:interceptors>
+		这里表示匹配所有请求
+		<ref bean="checklogin" />
+	</mvc:interceptors> -->
+	
+	
+	<!-- <mvc:interceptors>
+		这里表示匹配所有请求
+			这里直接写bean,就只能在这里使用，其他位置无法用到
+		
+		<bean class="cn.sz.gl.util.LoginIntercepter" ></bean>
+	</mvc:interceptors> -->
+	
+	
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<!-- 表示拦截器拦截的范围,
+				* 表示直接子目录
+				** 表示所有的后代目录,包括子目录
+				可以匹配多个范围
+			 -->
+			<mvc:mapping path="/**"/>
+			<bean class="cn.sz.gl.util.LoginIntercepter" ></bean>
+			<!-- 不拦截的范围 -->
+			<!-- <mvc:exclude-mapping path=""/> -->
+		</mvc:interceptor>
+	</mvc:interceptors>
+	 
+	
+	
+</beans>

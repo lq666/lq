@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sz.gl.pojo.Book" >
+
+	<select id="findallbook" resultType="cn.sz.gl.pojo.Book">
+		select bookid,book_name as bookName,book_auth as bookAuth,public_press as publicPress,price from book
+	</select>
+	
+	<select id="findBookByBookid" parameterType="java.lang.Integer" resultType="cn.sz.gl.pojo.Book">
+		select bookid,book_name as bookName,book_auth as bookAuth,public_press as publicPress,price from book 
+		where bookid=#{bookid}
+	</select>
+	
+	<select id="findPriceByBookid" parameterType="java.lang.Integer" resultType="java.lang.Integer" >
+		select price from book where bookid=#{bookid}
+	</select>
+	
+	
+	
+</mapper>

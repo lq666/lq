@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sz.gl.pojo.Account" >
+
+	<select id="findMyAccInfo" parameterType="java.lang.Integer" resultType="cn.sz.gl.pojo.Account" >
+		select accid,userid,balance from account where userid=#{userid}
+	</select>
+	
+	<update id="changeBalance" parameterType="java.util.Map" >
+		update account set balance=#{balance} where accid=#{accid}
+	</update>
+	
+	<select id="findBalanceByAccid" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		select balance from account where accid=#{accid}
+	</select>
+	
+</mapper>
